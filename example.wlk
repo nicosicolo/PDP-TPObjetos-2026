@@ -54,22 +54,11 @@ object barril {
   method precioTotal(cantidadInvitados) = precio * (cantidadInvitados / rendimiento).roundUp()
 }
 
-object sectorFamilia {
-  const property cantidadDeMesas = 6
-  const property invitadosPorMesa = 4
-
-  method cantidadDeInvitados() = cantidadDeMesas * invitadosPorMesa
-}
-
-object sectorFacultad {
-  const property cantidadDeGrupos = 3
-  const property invitadosPorGrupo = 4
-  const property acompañantesPorInvitado = 2
-
-  method cantidadDeInvitados() = cantidadDeGrupos * (invitadosPorGrupo + acompañantesPorInvitado)
 
 
-}
+object sectorFamilia inherits SectorPorMesa (cantidadDeMesas = 6, invitadosPorMesa = 4) {}
+
+object sectorFacultad inherits SectorPorGrupo (cantidadDeGrupos = 3, invitadosPorGrupo = 4, acompaniantesPorInvitado = 2) {}
 
 object isabella {
   var property ahorros = 10000000
@@ -84,4 +73,69 @@ object isabella {
 
   method presupuesto() = ahorros * (100 / porcentajeMaximo)
 
+}
+
+/* ENTREGA 2 */
+
+class Fiesta {
+  const property sectores
+  var property duracion
+
+  method cantidadDeSectores() = sectores.size()
+  method cantidadInvitados() = sectores.sum({sector => sector.cantidadDeInvitados()})
+  method esComplicada() = self.cantidadDeSectores() > 3
+  method esLarga() = duracion > 5
+}
+
+//  Sector como Service Class.
+class Sector {
+  method cantidadDeInvitados()
+}
+
+class SectorPorMesa inherits Sector {
+  var property cantidadDeMesas
+  var property invitadosPorMesa
+
+  override method cantidadDeInvitados() = invitadosPorMesa * cantidadDeMesas
+}
+
+class SectorPorGrupo inherits Sector {
+  const property cantidadDeGrupos
+  const property invitadosPorGrupo
+  const property acompaniantesPorInvitado
+
+  override method cantidadDeInvitados() = cantidadDeGrupos * (invitadosPorGrupo + acompaniantesPorInvitado)
+}
+
+class Proveedor {
+  method precioFinal(fiesta)
+}
+
+class Salon inherits Proveedor {
+  var property montoFijoSector
+  override method precioFinal(fiesta) = montoFijoSector * fiesta.cantidadSectores()
+}
+
+class Organizadores inherits Proveedor {
+  var property montoFijoSector
+  const property recargoFiestaComplicada = 0.20
+
+  method precioFiesta (fiesta) = fiesta.cantidadDeSectores() * montoFijoSector
+
+  method precioFiestaConRecargo (fiesta) = self.precioFiesta(fiesta) * (1 + recargoFiestaComplicada)
+
+  override method precioFinal(fiesta) {
+    if (fiesta.esComplicada()) {
+      return self.precioFiestaConRecargo(fiesta)
+    } else {
+      return self.precioFiesta(fiesta)
+    }
+  }
+}
+
+class EquipoMozos inherits Proveedor {
+  var property mozosPorSector
+  const property precioHoraSector = 50
+
+  override method precioFinal(fiesta) = fiesta.cantidadDeSectores() * mozosPorSector * fiesta.duracion() * precioHoraSector
 }
