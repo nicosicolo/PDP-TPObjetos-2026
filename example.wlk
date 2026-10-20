@@ -9,16 +9,16 @@ object pepita {
 }
 
 
-object doniaRosa {
+object doniaRosa inherits Proveedor {
   var property proveedorBebidas = barril
   var property precioPorInvitado = 20
 
   method precioCatering(cantidadDeInvitados) = precioPorInvitado * cantidadDeInvitados
 
-  method precio(cantidadDeInvitados) = self.precioCatering(cantidadDeInvitados) + proveedorBebidas.precioTotal(cantidadDeInvitados)
+  override method precioFinal(cantidadDeInvitados) = self.precioCatering(cantidadDeInvitados) + proveedorBebidas.precioTotal(cantidadDeInvitados)
 }
 
-object elBodegon {
+object elBodegon inherits Proveedor {
   var property limiteInvitados = 25
   var property precioBase = 900
   var property adicionalMuchosInvitados = 35
@@ -28,7 +28,7 @@ object elBodegon {
   method precioMuchosInvitados(cantidadInvitados) = precioBase + adicionalMuchosInvitados * self.excedenteInvitados(cantidadInvitados)
 
 
-  method precio(cantidadDeInvitados) {
+  override method precioFinal(cantidadDeInvitados) {
     if (cantidadDeInvitados > limiteInvitados) {
       return self.precioMuchosInvitados(cantidadDeInvitados)
     } else {
@@ -37,12 +37,12 @@ object elBodegon {
   }
 }
 
-object pizzasNico {
+object pizzasNico inherits Proveedor {
   var property tamanioBloque = 10
   var property precioPorBloque = 350
   var property proveedorBebidas = barril
   method cantidadDeBloques(cantidadDeInvitados) = cantidadDeInvitados.roundUp() / tamanioBloque
-  method precio(cantidadDeInvitados) = self.precioCatering(cantidadDeInvitados) + proveedorBebidas.precioTotal(cantidadDeInvitados)
+  override method precioFinal(cantidadDeInvitados) = self.precioCatering(cantidadDeInvitados) + proveedorBebidas.precioTotal(cantidadDeInvitados)
   method precioCatering(cantidadDeInvitados) = self.cantidadDeBloques(cantidadDeInvitados) * precioPorBloque + barril.precioTotal(cantidadDeInvitados)
 }
 
@@ -139,3 +139,24 @@ class EquipoMozos inherits Proveedor {
 
   override method precioFinal(fiesta) = fiesta.cantidadDeSectores() * mozosPorSector * fiesta.duracion() * precioHoraSector
 }
+
+class Seguridad inherits Proveedor {
+  const property precioPorSector = 100
+  var property recargoFiestaLarga
+
+  method precioFiestaLarga(fiesta) = self.precioFiesta(fiesta) * (1 + recargoFiestaLarga)
+
+  method precioFiesta(fiesta) = fiesta.cantidadDeSectores() * precioPorSector
+
+  override method precioFinal(fiesta) {
+    if (fiesta.esLarga()) {
+      return self.precioFiestaLarga(fiesta)
+    } else {
+      return self.precioFiesta(fiesta)
+    }
+  }
+}
+
+
+
+
