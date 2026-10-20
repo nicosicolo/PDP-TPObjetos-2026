@@ -157,6 +157,67 @@ class Seguridad inherits Proveedor {
   }
 }
 
+class Agencia {
+  const property proveedores = []
 
+  method puedeContratar(cliente, proveedor) = cliente.presupuesto() >= proveedor.precioFinal(cliente.fiesta())
+
+
+  method contratarProveedor(cliente, proveedor) {
+    if(self.puedeContratar(cliente, proveedor)) {
+      cliente.contratarProveedor(new ServicioContratado(proveedor = proveedor, totalGastado = proveedor.precioFinal(cliente.fiesta())))
+    } else {
+      throw new DomainException(message = "El precio de la contratación supera el límite de $" + cliente.presupuesto() + " permitido por su presupuesto estipulado.")
+    }
+  }
+
+  method incorporarProveedor(proveedor) {
+    proveedores.add(proveedor)
+  }
+
+  method desvincularProveedor(proveedor) {
+    proveedores.remove(proveedor)
+  }
+
+  method serviciosContratables(cliente, presupuesto) = proveedores.filter({ proveedor => self.puedeContratar(cliente, proveedor)})
+}
+
+class ServicioContratado {
+  const property proveedor
+  const property totalGastado
+}
+
+class Cliente {
+  var property ahorros
+  var property porcentajePresupuesto
+  var property fiesta
+  var property totalGastado
+  const property proveedoresContratados = #{}
+
+  method descontarPrecioFiesta(precioFiesta) {
+    ahorros = ahorros - precioFiesta
+  }
+
+  method presupuesto() = ahorros * (1 + porcentajePresupuesto)
+
+  method cantidadDeProveedoresContratados() = proveedoresContratados.size()
+
+  method agregarProveedor(proveedor) {
+    proveedoresContratados.add(proveedor)
+  }
+
+  method sumarTotalGastado(gastoNuevo) {
+    totalGastado += gastoNuevo
+  }
+
+  method contratarProveedor(proveedor) {
+    self.agregarProveedor(proveedor)
+    self.descontarPrecioFiesta(proveedor.precioFinal(fiesta))
+    self
+  }
+
+  method proveedoresContratados() = proveedoresContratados.map({ servicio => servicio.proveedor() })
+
+}
 
 
